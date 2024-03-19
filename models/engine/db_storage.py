@@ -36,8 +36,13 @@ class DBStorage:
     def all(self, cls=None):
         """query on current database session depending on class name"""
         objects = {}
-        for clss in classes:
-            if cls is None or cls is classes[clss] or cls is clss: 
+        if cls is not None and cls in classes.values(): 
+            query_result = self.__session.query(cls).all()
+            for obj in query_result:
+                key = "{}.{}".format(obj.__class__.__name__, obj.id)
+                objects[key] = obj
+        else:
+            for clss in classes.values():
                 query_result = self.__session.query(clss).all()
                 for obj in query_result:
                     key = "{}.{}".format(obj.__class__.__name__, obj.id)
