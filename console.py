@@ -115,16 +115,44 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        if not args:
+        parse_arg = args.split()
+        if not parse_arg:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+        class_name = parse_arg[0]
+        if class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        new_instance = HBNBCommand.classes[args]()
+        if len(parse_arg) < 2:
+            print("** attributes missing **")
+            return
+        # Extract parameters
+        params = ' '.join(parse_arg[1:])
+        
+        #process parameters
+        attributes = {}
+        for param in params.split():
+            key, value = param.split('=')
+            key = key.strip()
+            value = value.strip()
+
+            # Handle different value types
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1].replace('_', ' ')
+            elif '.' in value:
+                value = float(value)
+            else:
+                value = int(value)
+            attributes[key] = value
+
+        # instantiate object
+        new_instance = HBNBCommand.classes[class_name]()
+        # set object attributes
+        for key, value in attributes.items():
+            setattr(new_instance, key, value)
+
         storage.save()
         print(new_instance.id)
-        storage.save()
 
     def help_create(self):
         """ Help information for the create method """
