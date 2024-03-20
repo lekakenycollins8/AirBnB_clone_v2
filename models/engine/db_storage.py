@@ -26,21 +26,30 @@ class DBStorage:
     def __init__(self):
         self.__engine = create_engine(
                 'mysql+mysqldb://{}:{}@{}/{}'.format(
-                    os.environ.get('HBNB_MYSQL_USER'),
-                    os.environ.get('HBNB_MYSQL_PWD'),
-                    os.environ.get('HBNB_MYSQL_HOST'),
-                    os.environ.get('HBNB_MYSQL_DB')), pool_pre_ping=True)
-        if os.environ.get('HBNB_ENV') == "test":
+                    os.getenv('HBNB_MYSQL_USER'),
+                    os.getenv('HBNB_MYSQL_PWD'),
+                    os.getenv('HBNB_MYSQL_HOST'),
+                    os.getenv('HBNB_MYSQL_DB')), pool_pre_ping=True)
+        if os.getenv('HBNB_ENV') == "test":
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
         """query on current database session depending on class name"""
         objects = {}
-        if cls is not None and cls in classes.values():
-            query_result = self.__session.query(cls).all()
-            for obj in query_result:
-                key = "{}.{}".format(obj.__class__.__name__, obj.id)
-                objects[key] = obj
+        if cls is not None:
+            if isinstance(cls, str):
+                cls = classes.get(cls, None)
+            if cls in classes.values():
+                query_result = self.__session.query(cls).all()
+                for obj in query_result:
+                    key = "{}.{}".format(obj.__class__.__name__, obj.id)
+                    objects[key] = obj
+        else:
+            for cls in classes.values():
+                query_result = self.__session.query(cls).all()
+                for obj in query_result:
+                    key = "{}.{}".format(obj.__class__.__name__, obj.id)
+                    objects[key] = obj
         return objects
 
     def new(self, obj):
