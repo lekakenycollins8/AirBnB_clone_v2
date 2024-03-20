@@ -2,8 +2,18 @@
 """ Place Module for HBNB project """
 from models.base_model import BaseModel, Base
 import os
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
+from sqlalchemy.orm import relationship, backref
+
+
+# association table
+place_amenity = Table('place_amenity', Base.metadata,
+        Column('place_id', String(60), ForeignKey("places.id"),
+            primary_key=True, nullable=False),
+        Column('amenity_id', String(60), ForeignKey("amenities.id"),
+            primary_key=True, nullable=False)
+        )
+
 
 class Place(BaseModel, Base):
     """ A place to stay """
@@ -19,7 +29,9 @@ class Place(BaseModel, Base):
         price_by_night = Column(Integer, nullable=False, default=0)
         latitude = Column(Float, nullable=False)
         longitude = Column(Float, nullable=False)
-        reviews = relationship("Review", backref="place", cascade="all, delete-orphan" )
+        reviews = relationship("Review", backref="place", cascade="all, delete")
+        amenities = relationship("Amenity", secondary=place_amenity,
+                viewonly=False, back_populates="place_amenities")
     else:
         city_id = ""
         user_id = ""
@@ -40,9 +52,20 @@ class Place(BaseModel, Base):
     if os.getenv('HBNB_TYPE_STORAGE') != 'db':
         @property
         def reviews(self):
-            """returns list of City instances"""
+            """returns list of reviews instances"""
             from models import storage
-            review_instances = storage.all(Review)
-            return [review for review in review_instances.values()
+            review_instances = storage.all(Review).values()
+            return [review for review in review_instances
                     if review.place_id == self.id]
-
+        @property
+        def amenities(self):
+            """returns list of amenities"""
+            from models import storage
+            amen_instances = storage.all(Amenity).values()
+            return [amenity for amenity in amen_instances
+                    if self.id in amenity.amenity_ids]
+        @amenities.setter
+        def amenities(self, value):
+            """sets amenities"""
+            if isinstance(value, list):
+                self.amenity_ids = [amenity.id for amenity in value]
