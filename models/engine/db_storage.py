@@ -13,8 +13,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 
-classes = {"Amenity": Amenity, "City": City,
-           "Place": Place, "Review": Review, "State": State, "User": User}
+classes = {"Amenity": Amenity, "City": City, "Place": Place,
+        "Review": Review, "State": State, "User": User}
 
 class DBStorage:
     """database storage
@@ -36,17 +36,11 @@ class DBStorage:
     def all(self, cls=None):
         """query on current database session depending on class name"""
         objects = {}
-        if cls is not None and cls in classes.values(): 
+        if cls is not None and cls in classes.values():
             query_result = self.__session.query(cls).all()
             for obj in query_result:
                 key = "{}.{}".format(obj.__class__.__name__, obj.id)
                 objects[key] = obj
-        else:
-            for clss in classes.values():
-                query_result = self.__session.query(clss).all()
-                for obj in query_result:
-                    key = "{}.{}".format(obj.__class__.__name__, obj.id)
-                    objects[key] = obj
         return objects
 
     def new(self, obj):
