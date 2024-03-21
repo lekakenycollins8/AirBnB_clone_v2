@@ -3,6 +3,8 @@
 import cmd
 import sys
 import os
+import uuid
+from datetime import datetime
 from models.base_model import BaseModel, Base
 from models.__init__ import storage
 from models.user import User
@@ -153,8 +155,14 @@ class HBNBCommand(cmd.Cmd):
             setattr(new_instance, key, value)
         # Save the object based on storage type
         if os.getenv('HBNB_TYPE_STORAGE') != 'db':
-            storage.save()
+            new_instance.save()
         else:
+            if not hasattr(attributes, 'id'):
+                attributes['id'] = str(uuid.uuid4())
+            if not hasattr(attributes, 'created_at'):
+                attributes['created_at'] = str(datetime.now())
+            if not hasattr(attributes, 'updated_at'):
+                attributes['updated_at'] = str(datetime.now())
             new_instance.save()
         print(new_instance.id)
 

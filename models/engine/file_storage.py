@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """This module defines a class to manage file storage for hbnb clone"""
 import json
-
+import os
 
 class FileStorage:
     """This class manages storage of hbnb models in JSON format"""
@@ -20,13 +20,12 @@ class FileStorage:
         self.all().update({obj.to_dict()['__class__'] + '.' + obj.id: obj})
 
     def save(self):
-        """Saves storage dictionary to file"""
-        with open(FileStorage.__file_path, 'w') as f:
-            temp = {}
-            temp.update(FileStorage.__objects)
-            for key, val in temp.items():
-                temp[key] = val.to_dict()
-            json.dump(temp, f)
+        """serializes __objects to the JSON file (path: __file_path)"""
+        serialized_objects = {}
+        for key, obj in FileStorage.__objects.items():
+            serialized_objects[key] = obj.to_dict()
+        with open(FileStorage.__file_path, "w") as json_file:
+            json.dump(serialized_objects, json_file)
 
     def reload(self):
         """Loads storage dictionary from file"""
@@ -43,15 +42,28 @@ class FileStorage:
                     'State': State, 'City': City, 'Amenity': Amenity,
                     'Review': Review
                   }
-        try:
-            temp = {}
-            with open(FileStorage.__file_path, 'r') as f:
-                temp = json.load(f)
-                for key, val in temp.items():
-                        self.all()[key] = classes[val['__class__']](**val)
-        except FileNotFoundError:
-            pass
-
+        if os.path.exists(FileStorage.__file_path):
+            if os.path.getsize(FileStorage.__file_path) == 0:
+            # Handle the case of an empty file
+                print("JSON file is empty. No data to load.")
+                return
+            with open(FileStorage.__file_path, encoding="utf-8") as json_file:
+                try:
+                    object_data = json.load(json_file)
+                    for key, data in object_data.items():
+                        obj_class_name = data.get("__class__")
+                        if obj_class_name:
+                            if obj_class_name in classes.values():
+                                obj_class = classes[obj_class_name]
+                                instance = obj_class(**data)
+                                FileStorage.__objects[key] = instance
+                except FileNotFoundError:
+                    pass
+                except json.decoder.JSONDecodeError:
+                # Handle the case of invalid JSON data
+                    print("JSON file contains invalid data. Unable to load.")
+                    return
+    
     def delete(self, obj=None):
         """deletes obj from __objects if its inside"""
         if obj is None:
