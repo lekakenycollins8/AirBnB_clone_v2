@@ -4,7 +4,7 @@ from models.base_model import BaseModel, Base
 import os
 from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship, backref
-
+from models.city import City
 
 # association table
 if os.getenv('HBNB_TYPE_STORAGE') == 'db':
